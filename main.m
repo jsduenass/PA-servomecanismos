@@ -3,6 +3,7 @@ clear, clc, close all
 %trayectoria
 angle=linspace(0,4*pi,200);
 t=angle;
+dt=t(2)
 L1=6;    L2=8;
 r=8+2*cos(4*angle+pi);
 [x,y]=pol2cart(angle,r);
@@ -87,7 +88,12 @@ grid on
 workArea=[min([S1,S2],[],2);max([S1,S2],[],2)-min([S1,S2],[],2)];
 %%
 pause(1)
-figure('units','normalized','outerposition',[0 0 1 1])
+
+h=figure('units','normalized','outerposition',[0 0 1 1])
+
+axis tight manual % this ensures that getframe() returns a consistent size
+filename = 'Simulation.gif';
+
 for k= 1:length(t)  
   subplot(1,2,1)
   plot([0,S1(1,k)],[0,S1(2,k)])
@@ -120,7 +126,7 @@ for k= 1:length(t)
   grid on
 
   subplot(4,2,6)
-  h=plot(t(1:k),omega(:,1:k)); 
+  plot(t(1:k),omega(:,1:k)); 
   title("\omega [rad/s]")
   xlim([0,t(end)])
   ylim([min(omega,[],"all"),max(omega,[],"all")])
@@ -134,9 +140,21 @@ for k= 1:length(t)
   
   grid on
 
-  pause(0.01)
+  drawnow
   
+  % Capture the plot as an image 
+  frame = getframe(h); 
+  im = frame2im(frame); 
+  [imind,cm] = rgb2ind(im,256); 
+  % Write to the GIF File 
+  if k == 1 
+      imwrite(imind,cm,filename,'gif', 'Loopcount',inf); 
+  else 
+      imwrite(imind,cm,filename,'gif','WriteMode','append','DelayTime',dt); 
+  end 
+
 end
+
 
 
 %%
