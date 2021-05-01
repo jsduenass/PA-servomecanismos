@@ -1,30 +1,33 @@
 clear, clc, close all
 
-%trayectoria
-angle=linspace(0,4*pi,200);
-t=angle;
-dt=t(2)
+% Parametros 
 L1=6;    L2=8;
+m1=8;   m2=4;   mL=1;
+
+% Definición de trayectoria
+angle=linspace(0,4*pi,300);
+t=angle;
+dt=t(2);
+
 r=8+2*cos(4*angle+pi);
 [x,y]=pol2cart(angle,r);
 x=x/2+6;
 y=y/2+6;
 [angle,r]=cart2pol(x,y);
-
-% 
-% x=(4+0.2*t).*cos(t);      y=(6-0.2*t).*sin(t);
-%atan2(y,x)
 L=sqrt(x.^2+y.^2);
+
+% perfil de movimiento
 theta=[angle-acos((L.^2+L1^2-L2^2)./(2*L*L1));
              acos((L.^2-L1^2-L2^2)/(2*L1*L2))];
- 
+% perfil de velocidad 
 omega=gradient(theta);
+% perfil de aceleración
 alpha=gradient(omega);
 
+% series de tiempo vector de posición 
 S1=[]; S2=[];
 
 % centro de masa
-m1=8;   m2=4;   mL=1;
 c1=[]; c2=[];
 for k= 1:length(t)
   
@@ -89,35 +92,45 @@ workArea=[min([S1,S2],[],2);max([S1,S2],[],2)-min([S1,S2],[],2)];
 %%
 pause(1)
 
-h=figure('units','normalized','outerposition',[0 0 1 1])
+%h=figure()
+%h=figure('units','normalized','outerposition',[0 0 1 1])   %full screen
+
+h=figure('Renderer', 'painters', 'Position', [100 100 700 400]);
 
 axis tight manual % this ensures that getframe() returns a consistent size
 filename = 'Simulation.gif';
+capture=false;
 
 for k= 1:length(t)  
-  subplot(1,2,1)
-  plot([0,S1(1,k)],[0,S1(2,k)])
+  subplot(2,2,1)
+  %arm
+  plot([0,S1(1,k)],[0,S1(2,k)], "LineWidth",4)
   hold on
-  plot([S1(1,k), S2(1,k)],[S1(2,k), S2(2,k)])
-  plot(c1(1,k),c1(2,k),"o")
-  plot(c2(1,k)+S1(1,k),c2(2,k)+S1(2,k),"o")
-  rectangle('Position',workArea,'FaceColor',[0, 0.1, 0,0.05])  
-  plot(x,y,":")
+  plot([S1(1,k), S2(1,k)],[S1(2,k), S2(2,k)], "LineWidth",2)
+  plot(c1(1,k),c1(2,k),"ob")
+  plot(c2(1,k)+S1(1,k),c2(2,k)+S1(2,k),"or")
+  
+  % work area
+  rectangle('Position',workArea,"LineStyle","--")  
+  
+  %target trajectory
+  plot(x,y)
+  
   title("trayectoria")
   grid on
   axis equal
-  xlim([-20,20])
-  ylim([-20,20])
+  xlim([-10,25])
+  ylim([-12,12])
   hold off
   
-  subplot(4,2,2)
+  subplot(3,2,5)
   plot(t(1:k),Tm(:,1:k))
   title("Torque de motor [Nm]")
   grid on
   xlim([0,t(end)])
   ylim([min(Tm,[],"all"),max(Tm,[],"all")])
   
-  subplot(4,2,4)
+  subplot(3,2,2)
   plot(t(1:k),theta(:,1:k))
   title("\theta [rad]")
   xlim([0,t(end)])
@@ -125,14 +138,14 @@ for k= 1:length(t)
   
   grid on
 
-  subplot(4,2,6)
+  subplot(3,2,4)
   plot(t(1:k),omega(:,1:k)); 
   title("\omega [rad/s]")
   xlim([0,t(end)])
   ylim([min(omega,[],"all"),max(omega,[],"all")])
   grid on
 
-  subplot(4,2,8)
+  subplot(3,2,6)
   plot(t(1:k),alpha(:,1:k))
   title("\alpha [rad/s^2]")
   xlim([0,t(end)])
@@ -141,17 +154,18 @@ for k= 1:length(t)
   grid on
 
   drawnow
-  
-%   % Capture the plot as an image 
-%   frame = getframe(h); 
-%   im = frame2im(frame); 
-%   [imind,cm] = rgb2ind(im,256); 
-%   % Write to the GIF File 
-%   if k == 1 
-%       imwrite(imind,cm,filename,'gif', 'Loopcount',inf); 
-%   else 
-%       imwrite(imind,cm,filename,'gif','WriteMode','append','DelayTime',dt); 
-%   end 
+  if (capture & mod(k,5)==1)
+    % Capture the plot as an image 
+    frame = getframe(h); 
+    im = frame2im(frame); 
+    [imind,cm] = rgb2ind(im,256); 
+    % Write to the GIF File 
+    if k == 1 
+        imwrite(imind,cm,filename,'gif', 'Loopcount',inf); 
+    else 
+        imwrite(imind,cm,filename,'gif','WriteMode','append','DelayTime',5*dt); 
+    end 
+  end
 
 end
 
