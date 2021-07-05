@@ -1,34 +1,73 @@
 clear, clc, close all
 
+%
+% 
+% run motor_DC/parameters.m
+% 
+% my_model=sim("motor_DC/servo_system_model.slx");
+% 
+% w1=my_model.theta_m.Data;
+
+
+
 % Parametros 
-L1=6;    L2=8;
-m1=8;   m2=4;   mL=1;
+L1=22;    L2=17;
+m1=0.4;   m2=0.3;   mL=0.3;
 
 % Definición de trayectoria
-angle=linspace(0,4*pi,300);
-t=angle;
+angle=linspace(0,4*pi,300);   % 2 revolciones
+
+w=0.65;   % velocidad de trayectoria
+
+t=angle/w;
 dt=t(2);
 
-r=8+2*cos(4*angle+pi);
-[x,y]=pol2cart(angle,r);
-x=x/2+6;
-y=y/2+6;
-[angle,r]=cart2pol(x,y);
+% parametros de trayectoria trevol estilizado
+K=1;            % factor de escala entre 1 y 1.2
+phi=pi*0;       % desface
+A=0.4;          % factor de estilizado entre 0 y 1  
+r_base=8;       % radio base [cm]
+
+r=K*r_base*(1-A*cos(4*angle-phi));
+
+
+
+% Desplazamiento de trayectoria
+[x,y]=pol2cart(angle,r);  
+
+desp_x=12;
+desp_y=20;
+
+% dx=27;
+% dy=9;
+
+x=x+desp_y;
+y=y+desp_y;
+
+
+[angle,r]=cart2pol(x,y);  
+
+velocidad=vecnorm(gradient([x;y],dt),2,1);
+
+
+%
 L=sqrt(x.^2+y.^2);
 
-% perfil de movimiento
+% perfil de movimiento angular
 theta=[angle-acos((L.^2+L1^2-L2^2)./(2*L*L1));
              acos((L.^2-L1^2-L2^2)/(2*L1*L2))];
-% perfil de velocidad 
-omega=gradient(theta);
-% perfil de aceleración
-alpha=gradient(omega);
+% perfil de velocidad angular
+omega=gradient(theta,dt);
+
+% perfil de aceleración angular
+alpha=gradient(omega,dt);
 
 % series de tiempo vector de posición 
 S1=[]; S2=[];
 
-% centro de masa
+% centros de masas
 c1=[]; c2=[];
+
 for k= 1:length(t)
   
   theta1=theta(1,k);
@@ -37,19 +76,27 @@ for k= 1:length(t)
   P21=L2*R(theta2+theta1)*[1;0];
   P2=P21+P1;
   
-  c2(:,end+1)= (m2*P21/2+mL*P21)./(m2+mL);
-  c1(:,end+1)= (m2*(P21/2+P1) + mL*P2 + m1*P1/2)./(m1+m2+mL);
+  c2(:,end+1)= (m2*P21/2+mL*P21)./(m2+mL);                      % centro de masa 1
+  c1(:,end+1)= (m2*(P21/2+P1) + mL*P2 + m1*P1/2)./(m1+m2+mL);   % centro de masa 2
   
-  S1(:,end+1)=P1;
-  S2(:,end+1)=P2;
+  S1(:,end+1)=P1;   % trayectoria eslabon 1
+  S2(:,end+1)=P2;   % trayectoria eslabon 2
 end
 
-Tf=[1;2];
-Tp=[2;3];
-Tg=-9.81.*[(m1+m2+mL)*c1(1,:);(m2+mL)*c2(1,:)];
-J_L=[7;3];
+% Calculo de torque Dinamico 
 
-Tm=alpha.*J_L-Tg-Tf-Tp;
+Tf=0.1*omega;       % Torque de fricción 
+Tp=[2,3]*omega;       % Torque de proceso
+Tg=-9.81*[(m1+m2+mL)*c1(1,:);(m2+mL)*c2(1,:)]*10^-2;   % Torque gravitacional
+J_L=[3;3];      % Momento de inercia
+
+Tm=alpha.*J_L - Tg -Tf - Tp;
+%Tm=Tg ;
+
+%close all
+
+plot(t,velocidad)
+title("velocidad [cm/s]")
 
 figure ()
 subplot(3,1,1)
@@ -99,7 +146,7 @@ h=figure('Renderer', 'painters', 'Position', [100 100 700 400]);
 
 axis tight manual % this ensures that getframe() returns a consistent size
 filename = 'Simulation.gif';
-capture=false;
+capture=true;
 
 for k= 1:length(t)  
   subplot(2,2,1)
@@ -111,7 +158,7 @@ for k= 1:length(t)
   plot(c2(1,k)+S1(1,k),c2(2,k)+S1(2,k),"or")
   
   % work area
-  rectangle('Position',workArea,"LineStyle","--")  
+  %rectangle('Position',workArea,"LineStyle","--")  
   
   %target trajectory
   plot(x,y)
@@ -119,8 +166,8 @@ for k= 1:length(t)
   title("trayectoria")
   grid on
   axis equal
-  xlim([-10,25])
-  ylim([-12,12])
+  xlim([-10,18+dx])
+  ylim([-12,18+dy])
   hold off
   
   subplot(3,2,5)
