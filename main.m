@@ -10,57 +10,72 @@ clear, clc, close all
 
 
 
-% Parametros 
-L1=22;    L2=17;
-m1=0.4;   m2=0.3;   mL=0.3;
+% Parametros de mecanismo
+global L1 L2 desp_x desp_y  r_base
+L1=22;    L2=20;
+desp_x=24;
+desp_y=14;
 
-% Definición de trayectoria
-angle=linspace(0,4*pi,300);   % 2 revolciones
+x_home=8; y_home=-8;
 
-w=0.65;   % velocidad de trayectoria
+m1=0.4;   m2=0.3;   mL=0.2;
 
-t=angle/w;
-dt=t(2);
+dt=0.1;
 
-% parametros de trayectoria trevol estilizado
-K=1;            % factor de escala entre 1 y 1.2
-phi=pi*0;       % desface
-A=0.4;          % factor de estilizado entre 0 y 1  
-r_base=8;       % radio base [cm]
+% Parametros de trayectoria trevol estilizado
 
-r=K*r_base*(1-A*cos(4*angle-phi));
+r_base=8.5;       % radio base [cm]
+K=1.1;            % factor de escala entre 1 y 1.2
+phi=pi/4;       % desface
+A=0.3;          % factor de estilizado entre 0 y 1  
+cruce_speed=4;
+t_end=4*140/cruce_speed;
+
+r_max=K*r_base*(1+A);
+
+% Calculo de velocidad angular para obtener velocidad lineal constante
+syms angle t
+[x,y]=trayectory(K,phi,A,angle);
+
+velocity= sqrt(diff(x)^2+diff(y)^2);    % velocidad lineal
+
+w=matlabFunction(cruce_speed/velocity,'Vars',[t angle]);  % velocidad angular
+
+[x,y]=trayectory(K,phi,A,linspace(0,2*pi,100));
+
+d=sqrt((x-x_home).^2+(y-y_home).^2);
+[var,id]=min(d);
+
+initial_angle=2*pi*id/100;
+
+[t,angle_ref]=ode23(w,0:dt:t_end,initial_angle);
+
+plot(t,angle_ref)
+plot(t,gradient(angle_ref,t))
 
 
 
-% Desplazamiento de trayectoria
-[x,y]=pol2cart(angle,r);  
+%% positioning from home to trayectory
+angle=angle_ref';
+t=t';
 
-desp_x=12;
-desp_y=20;
+[x,y]=trayectory(K,phi,A,angle);
+N=40;
+x=[linspace(x_home,x(1),N),x];
 
-% dx=27;
-% dy=9;
-
-x=x+desp_y;
-y=y+desp_y;
-
-
-[angle,r]=cart2pol(x,y);  
-
-velocidad=vecnorm(gradient([x;y],dt),2,1);
-
-
-%
-L=sqrt(x.^2+y.^2);
+y=[linspace(y_home,y(1),N),y];
+t=[t,t(end)+(1:N)*dt];
 
 % perfil de movimiento angular
-theta=[angle-acos((L.^2+L1^2-L2^2)./(2*L*L1));
-             acos((L.^2-L1^2-L2^2)/(2*L1*L2))];
+theta=inverse_kinematic(x,y) ;
+
 % perfil de velocidad angular
 omega=gradient(theta,dt);
 
 % perfil de aceleración angular
 alpha=gradient(omega,dt);
+
+velocity=vecnorm(gradient([x;y],dt),2,1);
 
 % series de tiempo vector de posición 
 S1=[]; S2=[];
@@ -95,8 +110,9 @@ Tm=alpha.*J_L - Tg -Tf - Tp;
 
 %close all
 
-plot(t,velocidad)
+plot(t,velocity)
 title("velocidad [cm/s]")
+ylim([0,12])
 
 figure ()
 subplot(3,1,1)
@@ -134,8 +150,9 @@ plot(t,Tm)
 title("Torque de motor [Nm]")
 grid on
 
+limit_x=desp_x-r_max;
+limit_y=desp_y;
 
-workArea=[min([S1,S2],[],2);max([S1,S2],[],2)-min([S1,S2],[],2)];
 %%
 pause(1)
 
@@ -146,7 +163,7 @@ h=figure('Renderer', 'painters', 'Position', [100 100 700 400]);
 
 axis tight manual % this ensures that getframe() returns a consistent size
 filename = 'Simulation.gif';
-capture=true;
+capture=false;
 
 for k= 1:length(t)  
   subplot(2,2,1)
@@ -159,16 +176,18 @@ for k= 1:length(t)
   
   % work area
   %rectangle('Position',workArea,"LineStyle","--")  
-  
+  xline(limit_x,"--")
+  yline(limit_y,"--")
   %target trajectory
   plot(x,y)
   
   title("trayectoria")
   grid on
   axis equal
-  xlim([-10,18+dx])
-  ylim([-12,18+dy])
+  xlim([-14,max(x)+2])
+  ylim([-20,max(y)+2])
   hold off
+  
   
   subplot(3,2,5)
   plot(t(1:k),Tm(:,1:k))
@@ -182,9 +201,14 @@ for k= 1:length(t)
   title("\theta [rad]")
   xlim([0,t(end)])
   ylim([min(theta,[],"all"),max(theta,[],"all")])
-  
   grid on
 
+  plot(t(1:k),velocity(1:k))
+  title("velocidad [cm/s]")
+  ylim([0,12])
+  xlim([0,t(end)])
+  
+  
   subplot(3,2,4)
   plot(t(1:k),omega(:,1:k)); 
   title("\omega [rad/s]")
@@ -201,7 +225,7 @@ for k= 1:length(t)
   grid on
 
   drawnow
-  if (capture & mod(k,5)==1)
+  if (capture & mod(k,1)==1)
     % Capture the plot as an image 
     frame = getframe(h); 
     im = frame2im(frame); 
