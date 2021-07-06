@@ -1,14 +1,5 @@
 clear, clc, close all
 
-%
-% 
-% run motor_DC/parameters.m
-% 
-% my_model=sim("motor_DC/servo_system_model.slx");
-% 
-% w1=my_model.theta_m.Data;
-
-
 
 % Parametros de mecanismo
 global L1 L2 desp_x desp_y  r_base
@@ -20,27 +11,18 @@ x_home=8; y_home=-8;
 
 m1=0.4;   m2=0.3;   mL=0.2;
 
-dt=0.1;
 
 % Parametros de trayectoria trevol estilizado
 
 r_base=8.5;       % radio base [cm]
 K=1.1;            % factor de escala entre 1 y 1.2
-phi=pi/4;       % desface
-A=0.4;          % factor de estilizado entre 0 y 1  
+phi=pi/4;         % desface
+A=0.4;            % factor de estilizado entre 0 y 1  
 cruce_speed=4;
-t_end=140/cruce_speed;
 
 r_max=K*r_base*(1+A);
 
-% Calculo de velocidad angular para obtener velocidad lineal constante
-syms angle t
-[x,y]=trayectory(K,phi,A,angle);
-
-velocity= sqrt(diff(x)^2+diff(y)^2);    % velocidad lineal
-
-w=matlabFunction(cruce_speed/velocity,'Vars',[t angle]);  % velocidad angular
-
+% calculo angulo inicial de trayectoria como aquel más cercano a la posición home 
 [x,y]=trayectory(K,phi,A,linspace(0,2*pi,100));
 
 d=sqrt((x-x_home).^2+(y-y_home).^2);
@@ -48,42 +30,42 @@ d=sqrt((x-x_home).^2+(y-y_home).^2);
 
 initial_angle=2*pi*id/100;
 
-[t,angle_ref]=ode23(w,0:dt:t_end,initial_angle);
+% Calculo velocidad constante con vector de tiempo de espaciado no uniforme
+syms angle t
+[x,y]=trayectory(K,phi,A,angle);
 
-plot(t,angle_ref)
-plot(t,gradient(angle_ref,t))
+velocity= sqrt(diff(x)^2+diff(y)^2);        % velocidad lineal
 
+dt= matlabFunction(velocity/cruce_speed);  
 
-%% Calculo alternativo velocidad constante tiempo variable
-var= matlabFunction(velocity/cruce_speed);  % velocidad angular
+angle=linspace(initial_angle,initial_angle+4*pi,300);   % vector angular
 
-angle=linspace(initial_angle,initial_angle+4*pi,150);
-dt = var(angle);
+tiempo=cumtrapz(angle,dt(angle));  % tiempo con espaciado no uniforme
 
-t=cumtrapz(angle,dt);
-tiempo=linspace(t(1),t(end),length(t));
-angle  = interp1(t,angle,tiempo);
-t=tiempo;
+% interpolación de angulo a tiempo con espaciado uniforme 
+t=linspace(tiempo(1),tiempo(end),length(tiempo));
+angle  = interp1(tiempo,angle,t);
+
 dt=t(2);
 %% positioning from home to trayectory
-% angle=angle_ref';
-% t=t';
 
 [x,y]=trayectory(K,phi,A,angle);
-N=ceil(min_d/(cruce_speed*dt))+1;
-x=[linspace(x_home,x(1),N),x];
 
-y=[linspace(y_home,y(1),N),y];
-t=[t,t(end)+(1:N)*dt];
+N=ceil(min_d/(cruce_speed*dt))+1; 
+x_trans=linspace(x_home,x(1),N);    % Transtional trayectories
+y_trans=linspace(y_home,y(1),N);
+x=[x_trans, x, flip(x_trans)];
+y=[y_trans, y, flip(y_trans)];
+t=[t,t(end)+(1:2*N)*dt];
 
 % perfil de movimiento angular
-theta=inverse_kinematic(x,y) ;
+theta_m=inverse_kinematic(x,y) ;
 
 % perfil de velocidad angular
-omega=gradient(theta,dt);
+omega_m=gradient(theta_m,dt);
 
 % perfil de aceleración angular
-alpha=gradient(omega,dt);
+alpha_m=gradient(omega_m,dt);
 
 velocity=vecnorm(gradient([x;y],dt),2,1);
 
@@ -95,8 +77,8 @@ c1=[]; c2=[];
 
 for k= 1:length(t)
   
-  theta1=theta(1,k);
-  theta2=theta(2,k);
+  theta1=theta_m(1,k);
+  theta2=theta_m(2,k);
   P1=L1*R(theta1)*[1;0];
   P21=L2*R(theta2+theta1)*[1;0];
   P2=P21+P1;
@@ -110,12 +92,12 @@ end
 
 % Calculo de torque Dinamico 
 
-Tf=0.1*omega;       % Torque de fricción 
-Tp=[2,3]*omega;       % Torque de proceso
+Tf=0.1*omega_m;       % Torque de fricción 
+Tp=[2,3]*omega_m;       % Torque de proceso
 Tg=-9.81*[(m1+m2+mL)*c1(1,:);(m2+mL)*c2(1,:)]*10^-2;   % Torque gravitacional
 J_L=[3;3];      % Momento de inercia
 
-Tm=alpha.*J_L - Tg -Tf - Tp;
+Tm=alpha_m.*J_L - Tg -Tf - Tp;
 %Tm=Tg ;
 
 %close all
@@ -126,18 +108,18 @@ ylim([0,12])
 
 figure ()
 subplot(3,1,1)
-plot(t,theta)
-title("\theta [rad]")
+plot(t,theta_m)
+title("\theta_m [rad]")
 grid on
 
 subplot(3,1,2)
-h=plot(t,omega); 
-title("\omega [rad/s]")
+h=plot(t,omega_m); 
+title("\omega_m [rad/s]")
 grid on
 
 subplot(3,1,3)
-plot(t,alpha)
-title("\alpha [rad/s^2]")
+plot(t,alpha_m)
+title("\alpha_m [rad/s^2]")
 grid on
 
 %pause(2)
@@ -173,7 +155,7 @@ h=figure('Renderer', 'painters', 'Position', [100 100 700 400]);
 
 axis tight manual % this ensures that getframe() returns a consistent size
 filename = 'Simulation.gif';
-capture=false;
+capture=true;
 
 for k= 1:length(t)  
   subplot(2,2,1)
@@ -207,10 +189,10 @@ for k= 1:length(t)
   ylim([min(Tm,[],"all"),max(Tm,[],"all")])
   
   subplot(3,2,2)
-  plot(t(1:k),theta(:,1:k))
-  title("\theta [rad]")
+  plot(t(1:k),theta_m(:,1:k))
+  title("\theta_m [rad]")
   xlim([0,t(end)])
-  ylim([min(theta,[],"all"),max(theta,[],"all")])
+  ylim([min(theta_m,[],"all"),max(theta_m,[],"all")])
   grid on
 
   plot(t(1:k),velocity(1:k))
@@ -220,22 +202,23 @@ for k= 1:length(t)
   
   
   subplot(3,2,4)
-  plot(t(1:k),omega(:,1:k)); 
-  title("\omega [rad/s]")
+  plot(t(1:k),omega_m(:,1:k)); 
+  title("\omega_m [rad/s]")
   xlim([0,t(end)])
-  ylim([min(omega,[],"all"),max(omega,[],"all")])
+  ylim([min(omega_m,[],"all"),max(omega_m,[],"all")])
   grid on
 
   subplot(3,2,6)
-  plot(t(1:k),alpha(:,1:k))
-  title("\alpha [rad/s^2]")
+  plot(t(1:k),alpha_m(:,1:k))
+  title("\alpha_m [rad/s^2]")
   xlim([0,t(end)])
-  ylim([min(alpha,[],"all"),max(alpha,[],"all")])
+  ylim([min(alpha_m,[],"all"),max(alpha_m,[],"all")])
   
   grid on
 
   drawnow
-  if (capture & mod(k,1)==1)
+  n=5
+  if (capture & mod(k,n)==1)
     % Capture the plot as an image 
     frame = getframe(h); 
     im = frame2im(frame); 
@@ -244,7 +227,7 @@ for k= 1:length(t)
     if k == 1 
         imwrite(imind,cm,filename,'gif', 'Loopcount',inf); 
     else 
-        imwrite(imind,cm,filename,'gif','WriteMode','append','DelayTime',5*dt); 
+        imwrite(imind,cm,filename,'gif','WriteMode','append','DelayTime',n*dt); 
     end 
   end
 
@@ -256,8 +239,8 @@ end
 
  
 
-function rot=R(theta)
-  rot=[cos(theta),-sin(theta);sin(theta),cos(theta)];
+function rot=R(theta_m)
+  rot=[cos(theta_m),-sin(theta_m);sin(theta_m),cos(theta_m)];
 end
 
 
