@@ -27,9 +27,9 @@ dt=0.1;
 r_base=8.5;       % radio base [cm]
 K=1.1;            % factor de escala entre 1 y 1.2
 phi=pi/4;       % desface
-A=0.3;          % factor de estilizado entre 0 y 1  
+A=0.4;          % factor de estilizado entre 0 y 1  
 cruce_speed=4;
-t_end=4*140/cruce_speed;
+t_end=140/cruce_speed;
 
 r_max=K*r_base*(1+A);
 
@@ -44,7 +44,7 @@ w=matlabFunction(cruce_speed/velocity,'Vars',[t angle]);  % velocidad angular
 [x,y]=trayectory(K,phi,A,linspace(0,2*pi,100));
 
 d=sqrt((x-x_home).^2+(y-y_home).^2);
-[var,id]=min(d);
+[min_d,id]=min(d);
 
 initial_angle=2*pi*id/100;
 
@@ -54,13 +54,23 @@ plot(t,angle_ref)
 plot(t,gradient(angle_ref,t))
 
 
+%% Calculo alternativo velocidad constante tiempo variable
+var= matlabFunction(velocity/cruce_speed);  % velocidad angular
 
+angle=linspace(initial_angle,initial_angle+4*pi,150);
+dt = var(angle);
+
+t=cumtrapz(angle,dt);
+tiempo=linspace(t(1),t(end),length(t));
+angle  = interp1(t,angle,tiempo);
+t=tiempo;
+dt=t(2);
 %% positioning from home to trayectory
-angle=angle_ref';
-t=t';
+% angle=angle_ref';
+% t=t';
 
 [x,y]=trayectory(K,phi,A,angle);
-N=40;
+N=ceil(min_d/(cruce_speed*dt))+1;
 x=[linspace(x_home,x(1),N),x];
 
 y=[linspace(y_home,y(1),N),y];
