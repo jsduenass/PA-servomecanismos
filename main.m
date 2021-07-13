@@ -172,7 +172,7 @@ pause(1)
 h=figure('Renderer', 'painters', 'Position', [100 100 700 400]);
 
 axis tight manual % this ensures that getframe() returns a consistent size
-filename = 'Simulation.gif';
+filename = './media/inverseKinematics.gif';
 capture=false;
 
 

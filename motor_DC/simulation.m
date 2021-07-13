@@ -65,6 +65,12 @@ plot(time, w_ref(:,1),"--b",time, w2(:,1),"b")
 plot(time, w_ref(:,2),"--r",time, w2(:,2),"r")
 
 %%
+
+
+filename = '../Simulation.gif';
+capture=true;
+h=figure('Renderer', 'painters', 'Position', [100 100 700 400]);
+
 for k= 1:length(time)
   
 subplot(1,2,1)
@@ -90,14 +96,14 @@ subplot(3,2,2)
 style={"--","--","-","-"};
 color={"blue","red","blue","red"};
 
-h=plot(time,w_ref,time,w2);
+var=plot(time,w_ref,time,w2);
 
 % for i=1:4 
 %   
 % h(i).LineStyle=style{i};
 % end
-[h(:).LineStyle] = style{:};
-[h(:).Color] = color{:};
+[var(:).LineStyle] = style{:};
+[var(:).Color] = color{:};
 
 title("\theta  [rad]")
 
@@ -112,6 +118,20 @@ plot(time,torque)
 title("Torque [Nm]")
 
  drawnow
+
+  if (capture)
+    % Capture the plot as an image 
+    frame = getframe(h); 
+    im = frame2im(frame); 
+    [imind,cm] = rgb2ind(im,256); 
+    % Write to the GIF File 
+    if k == 1 
+        imwrite(imind,cm,filename,'gif', 'Loopcount',inf); 
+    else 
+        imwrite(imind,cm,filename,'gif','WriteMode','append','DelayTime',n*dt); 
+    end 
+  end
+
 end
 
 
