@@ -3,32 +3,44 @@ clear, clc, close all
 
 % Parametros de mecanismo
 global L1 L2 desp_x desp_y  r_base
+% Distancia [cm]
 L1=22;    L2=20;
 desp_x=24;
 desp_y=14;
 
 x_home=8; y_home=-8;
 
-m1=0.4;   m2=0.3;   mL=0.2;
+% masa [kg]
+m1=0.455*L1/100;   % masa barra 1
+m2=0.455*L2/100;   % masa barra 2
+mM1=0.2;           % masa motor 1
+mM2=0.4;           % masa motor 2
+mL=0.02;           % masa carga
 
+% Parametros de motor
+
+J_m=5.8e-6;
+
+b=[0.05,0.05];       % coeficiente de fricción de sistema [Nm/s] 
+N= 1;             % razon sistema de transmisión
 
 % Parametros de trayectoria trevol estilizado
 
 r_base=8.5;       % radio base [cm]
 K=1.1;            % factor de escala entre 1 y 1.2
-phi=pi/4;         % desface
+phi=-3*pi/4;         % desface
 A=0.4;            % factor de estilizado entre 0 y 1  
 cruce_speed=4;
-
 r_max=K*r_base*(1+A);
 
 % calculo angulo inicial de trayectoria como aquel más cercano a la posición home 
 [x,y]=trayectory(K,phi,A,linspace(0,2*pi,100));
 
 d=sqrt((x-x_home).^2+(y-y_home).^2);
-[min_d,id]=min(d);
-
-initial_angle=2*pi*id/100;
+% [min_d,id]=min(d);
+% 
+% initial_angle=2*pi*id/100;
+initial_angle=-2*pi/4;
 
 % Calculo velocidad constante con vector de tiempo de espaciado no uniforme
 syms angle t
@@ -40,23 +52,28 @@ dt= matlabFunction(velocity/cruce_speed);
 
 angle=linspace(initial_angle,initial_angle+4*pi,300);   % vector angular
 
+
 tiempo=cumtrapz(angle,dt(angle));  % tiempo con espaciado no uniforme
 
 % interpolación de angulo a tiempo con espaciado uniforme 
 t=linspace(tiempo(1),tiempo(end),length(tiempo));
 angle  = interp1(tiempo,angle,t);
 
+% modelo lineal
+t=linspace(0,t(end),length(t));
+T=40;
+angle= 2*pi*t/T-3*pi/4;
 dt=t(2);
 %% positioning from home to trayectory
 
 [x,y]=trayectory(K,phi,A,angle);
-
-N=ceil(min_d/(cruce_speed*dt))+1; 
-x_trans=linspace(x_home,x(1),N);    % Transtional trayectories
-y_trans=linspace(y_home,y(1),N);
-x=[x_trans, x, flip(x_trans)];
-y=[y_trans, y, flip(y_trans)];
-t=[t,t(end)+(1:2*N)*dt];
+% 
+% n=ceil(min_d/(cruce_speed*dt))+1; 
+% x_trans=linspace(x_home,x(1),n);    % Transtional trayectories
+% y_trans=linspace(y_home,y(1),n);
+% x=[x_trans, x, flip(x_trans)];
+% y=[y_trans, y, flip(y_trans)];
+% t=[t,t(end)+(1:2*n)*dt];
 
 % perfil de movimiento angular
 theta_m=inverse_kinematic(x,y) ;
@@ -84,7 +101,7 @@ for k= 1:length(t)
   P2=P21+P1;
   
   c2(:,end+1)= (m2*P21/2+mL*P21)./(m2+mL);                      % centro de masa 1
-  c1(:,end+1)= (m2*(P21/2+P1) + mL*P2 + m1*P1/2)./(m1+m2+mL);   % centro de masa 2
+  c1(:,end+1)= (m2*(P21/2+P1) + mL*(P2+P1)+ mM2*P1 + m1*P1/2)./(m1+m2+mL+mM2);   % centro de masa 2
   
   S1(:,end+1)=P1;   % trayectoria eslabon 1
   S2(:,end+1)=P2;   % trayectoria eslabon 2
@@ -92,13 +109,14 @@ end
 
 % Calculo de torque Dinamico 
 
-Tf=0.1*omega_m;       % Torque de fricción 
-Tp=[2,3]*omega_m;       % Torque de proceso
-Tg=-9.81*[(m1+m2+mL)*c1(1,:);(m2+mL)*c2(1,:)]*10^-2;   % Torque gravitacional
-J_L=[3;3];      % Momento de inercia
+Tf=b*omega_m;       % Torque de fricción 
+Tp=[0,0]*omega_m;       % Torque de proceso
+Tg=-9.81*[(m1+m2+mL+mM2)*c1(1,:);(m2+mL)*c2(1,:)]*10^-2;   % Torque gravitacional
+J_barra=1/3*[(m1*L1^2);(m2*L2^2)]*10^-4;                        % Momento de inercia
 
-Tm=alpha_m.*J_L - Tg -Tf - Tp;
-%Tm=Tg ;
+J_L=J_barra./N^2+J_m;
+
+Tm=alpha_m.*J_L + Tg +Tf + Tp;
 
 %close all
 
@@ -155,7 +173,8 @@ h=figure('Renderer', 'painters', 'Position', [100 100 700 400]);
 
 axis tight manual % this ensures that getframe() returns a consistent size
 filename = 'Simulation.gif';
-capture=true;
+capture=false;
+
 
 for k= 1:length(t)  
   subplot(2,2,1)
