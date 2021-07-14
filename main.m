@@ -5,10 +5,11 @@ clear, clc, close all
 global L1 L2 desp_x desp_y  r_base
 % Distancia [cm]
 L1=22;    L2=20;
-desp_x=24;
-desp_y=14;
+desp_x=24;    desp_y=14;
+x_home=8;     y_home=-8;
 
-x_home=8; y_home=-8;
+displacement=[desp_x;desp_y];
+home=[x_home;y_home];
 
 % masa [kg]
 m1=0.455*L1/100;   % masa barra 1
@@ -37,10 +38,9 @@ r_max=K*r_base*(1+A);
 [x,y]=trayectory(K,phi,A,linspace(0,2*pi,100));
 
 d=sqrt((x-x_home).^2+(y-y_home).^2);
-% [min_d,id]=min(d);
-% 
-% initial_angle=2*pi*id/100;
-initial_angle=-2*pi/4;
+[min_d,id]=min(d);
+
+angle_ini=2*pi*id/100;
 
 % Calculo velocidad constante con vector de tiempo de espaciado no uniforme
 syms angle t
@@ -50,7 +50,7 @@ velocity= sqrt(diff(x)^2+diff(y)^2);        % velocidad lineal
 
 dt= matlabFunction(velocity/cruce_speed);  
 
-angle=linspace(initial_angle,initial_angle+4*pi,300);   % vector angular
+angle=linspace(angle_ini,angle_ini+4*pi,300);   % vector angular
 
 
 tiempo=cumtrapz(angle,dt(angle));  % tiempo con espaciado no uniforme
@@ -62,8 +62,9 @@ angle  = interp1(tiempo,angle,t);
 % modelo lineal
 t=linspace(0,t(end),length(t));
 T=40;
-angle= 2*pi*t/T-3*pi/4;
+angle= 2*pi*t/T+angle_ini;
 dt=t(2);
+
 %% positioning from home to trayectory
 
 [x,y]=trayectory(K,phi,A,angle);
@@ -114,7 +115,7 @@ Tp=[0,0]*omega_m;       % Torque de proceso
 Tg=-9.81*[(m1+m2+mL+mM2)*c1(1,:);(m2+mL)*c2(1,:)]*10^-2;   % Torque gravitacional
 J_barra=1/3*[(m1*L1^2);(m2*L2^2)]*10^-4;                        % Momento de inercia
 
-J_L=J_barra./N^2+J_m;
+J_L=J_barra+J_m;
 
 Tm=alpha_m.*J_L + Tg +Tf + Tp;
 

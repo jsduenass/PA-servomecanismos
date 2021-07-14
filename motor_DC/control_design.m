@@ -1,10 +1,22 @@
 %% controlller design
 
-run parameters.m
 
+% parametros motor DC generico
+J = 1.62e-6 ;         
+
+La = 0.58e-3;         %H
+Ra = 1.17;            %Ohm
+b = 1.34e-6;          %Nm /(rad / s)
+Kt = 0.011;           %Nm / A
+Kb = 0.011;           %V /(rad / s)
+tau_e = 0.50e-3;      %s
+tau_m = 16e-3;        %s
+tau_t = 660;          %s
+
+% Adaptar parametros a motor 1 o motor 2
 J=J1;   b=b1;     Ra=Ra1;   La=La1; Kt=Kt1;   Kb=Kb1;
 
-%J=J2;   b=b2;     Ra=Ra2;   La=La2; Kt=Kt2;   Kb=Kb2;
+J=J2;   b=b2;     Ra=Ra2;   La=La2; Kt=Kt2;   Kb=Kb2;
 
 
 % simplified DC_motor parameters
@@ -13,7 +25,6 @@ tau_mot=(Ra*J)/(b+Kt*Kb);
 
 % sensor
 K_sensor=12/(pi/4);
-
 
 K_driver=1;
 

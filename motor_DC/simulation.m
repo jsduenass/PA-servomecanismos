@@ -1,50 +1,58 @@
 
-
-mode=2;
 % Parametros motor 1
-t_end=20;
+  N1=5;
 
-N1=5;
+  Kp1 = 3.16, Ki1 = 4.1, Kd1 = 0.0343
+  Kp1 = 0.688, Ki1 = 0;     Kd1 = 0;
+  
+  La1 = 2.93e-3;               %H
+  Ra1 = 0.89;               %Ohm
 
-Kp1 = 3.16, Ki1 = 4.1, Kd1 = 0.0343
 
-La1 = 2.93e-3;               %H
-Ra1 = 0.89;               %Ohm
+  J1 =J_barra(1)/N1^2;      %kg-m^2
+  b1=0.005;
 
-JM1=3.3e-4
-J1 =J_barra(1)/N1^2;      %kg-m^2
-RI1=J1/JM1;
+  JM1=3.3e-4
+  RI1=J1/JM1;
 
-b1=0.005;
-
-Kt1 = 0.018;           %Nm / A
-Kb1 = 0.018;           %V /(rad / s)
+  Kt1 = 0.018;           %Nm / A
+  Kb1 = 0.018;           %V /(rad / s)
 
 
 % Parametros motor 2
 
+  N2=15;
 
-N2=15;
+  Kp2 = 0.146, Ki2 = 1.52, Kd2 = 0.00151;
+  Kp2 = 0.0353;  Ki2=0;  Kd2=0;
+  
+  La2 = 0.42e-3;           %H
+  Ra2 = 0.7;              %Ohm
 
-Kp2 = 0.146, Ki2 = 1.52, Kd2 = 0.00151;
+  J2 =J_barra(2)/N2^2;        %kg-m^2
+  b2=3.7e-6;
 
-% Kp2=6/N1;
-% Ki2=0.5/N1;
-% Kd2=2/N1;
+  JM2 =5.8e-6;
+  RI2=J2/JM2
 
-La2 = 0.42e-3;           %H
-Ra2 = 0.7;              %Ohm
-
-JM2 =5.8e-6;
-J2 =J_barra(2)/N2^2;        %kg-m^2
-RI2=J2/JM2
-b2=3.7e-6;
-
-Kt2 = 0.0145;           %Nm / A
-Kb2 = 0.0145;           %V /(rad / s)
+  Kt2 = 0.0145;           %Nm / A
+  Kb2 = 0.0145;           %V /(rad / s)
 
 
-sampling=500;
+% Parametros simulacion
+  t_end=20;
+  dt=1e-4;
+  sampling=500;
+
+  % sensor
+  K_sensor=12/(pi/4);
+
+  % condicion inicial
+  theta1_ini=theta_m(1,1);
+  theta2_ini=theta_m(2,1);
+
+  mode=2;       % Modo  referencia de simulación 1: paso 2: trayectoria 3:zero
+
 my_model=sim("motor_DC/servo_system_model.slx");
 
 close all
@@ -64,11 +72,11 @@ plot(time, w_ref(:,1),"--b",time, w2(:,1),"b")
 
 plot(time, w_ref(:,2),"--r",time, w2(:,2),"r")
 
-%%
+%% Animación
 
 
 filename = '../Simulation.gif';
-capture=true;
+capture=false;
 h=figure('Renderer', 'painters', 'Position', [100 100 700 400]);
 
 for k= 1:length(time)

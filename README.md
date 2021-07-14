@@ -6,5 +6,5 @@ Este repositorio contiene la simulación de un mecanismo  con movimiento en un p
 
 ## Simulink
 
-![Modelo global ](https://raw.githubusercontent.com/jsduenass/PA-servomecanismos/master/media/simulink_global.pngimulation.gif)
+![Modelo global ](https://raw.githubusercontent.com/jsduenass/PA-servomecanismos/master/media/simulink_global.png)
 
