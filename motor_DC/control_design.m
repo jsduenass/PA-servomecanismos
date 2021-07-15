@@ -81,7 +81,7 @@ w_n=pi/(t_p*sqrt(1-z^2));
 
  %% de aqui pa bajo
    close all
-   pos=w2(:,2);
+   pos=w2(:,1);
   var =gradient(pos,time(2));
   subplot(2,1,1)
   plot(time,mod(pos,2*pi))
@@ -118,4 +118,5 @@ K_mot_calc=m/A
 tau_mot_calc=-b/m
 
 plot(t,y, t, m*t+b,"--")
+yline(0)
 

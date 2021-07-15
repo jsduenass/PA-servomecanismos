@@ -29,14 +29,14 @@ N= 1;             % razon sistema de transmisión
 % Parametros de trayectoria trevol estilizado
 
 r_base=8.5;       % radio base [cm]
-K=1.1;            % factor de escala entre 1 y 1.2
+Amp=1.1;            % factor de escala entre 1 y 1.2
 phi=-3*pi/4;         % desface
-A=0.4;            % factor de estilizado entre 0 y 1  
+K=0.4;            % factor de estilizado entre 0 y 1  
 cruce_speed=4;
-r_max=K*r_base*(1+A);
+r_max=Amp*r_base*(1+K);
 
 % calculo angulo inicial de trayectoria como aquel más cercano a la posición home 
-[x,y]=trayectory(K,phi,A,linspace(0,2*pi,100));
+[x,y]=trayectory(Amp,phi,K,linspace(0,2*pi,100));
 
 d=sqrt((x-x_home).^2+(y-y_home).^2);
 [min_d,id]=min(d);
@@ -45,7 +45,7 @@ angle_ini=2*pi*id/100;
 
 % Calculo velocidad constante con vector de tiempo de espaciado no uniforme
 syms angle t
-[x,y]=trayectory(K,phi,A,angle);
+[x,y]=trayectory(Amp,phi,K,angle);
 
 velocity= sqrt(diff(x)^2+diff(y)^2);        % velocidad lineal
 
@@ -62,20 +62,20 @@ angle  = interp1(tiempo,angle,t);
 
 % modelo lineal
 t=linspace(0,t(end),length(t));
-T=5;
+T=20;
 angle= 2*pi*t/T+angle_ini;
 dt=t(2);
 
 %% positioning from home to trayectory
  
- [x,y]=trayectory(K,phi,A,angle);
-% 
-% n=ceil(min_d/(cruce_speed*dt))+1; 
-% x_trans=linspace(x_home,x(1),n);    % Transtional trayectories
-% y_trans=linspace(y_home,y(1),n);
-% x=[x_trans, x, flip(x_trans)];
-% y=[y_trans, y, flip(y_trans)];
-% t=[t,t(end)+(1:2*n)*dt];
+ [x,y]=trayectory(Amp,phi,K,angle);
+
+n=ceil(min_d/(cruce_speed*dt))+1; 
+x_trans=linspace(x_home,x(1),n);    % Transtional trayectories
+y_trans=linspace(y_home,y(1),n);
+x=[x_trans, x, flip(x_trans)];
+y=[y_trans, y, flip(y_trans)];
+t=[t,t(end)+(1:2*n)*dt];
 
 % perfil de movimiento angular
 theta_m=inverse_kinematic(x,y) ;
@@ -178,7 +178,7 @@ filename = './media/inverseKinematics.gif';
 capture=false;
 
 
-for k= 1:length(t)  
+for k= 1:1 %length(t)  
   subplot(2,2,1)
   %arm
   plot([0,S1(1,k)],[0,S1(2,k)], "LineWidth",4)

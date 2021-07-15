@@ -1,9 +1,10 @@
 
 % Parametros motor 1
   N1=5;
-
+  N1=1;
+  
   Kp1 = 2.16, Ki1 = 0.3, Kd1 = 0.3
-  Kp1 = 1, Ki1 = 0;     Kd1 = 0;
+  Kp1 = 3, Ki1 = 0;     Kd1 = 0.1;
   
   La1 = 2.93e-3;               %H
   Ra1 = 0.89;               %Ohm
@@ -22,9 +23,10 @@
 % Parametros motor 2
 
   N2=15;
+  N2=1;
 
   Kp2 = 2.46, Ki2 = 0.5, Kd2 = 0.00;
-  Kp2 = 1;  Ki2=0;  Kd2=0;
+  Kp2 = 3;  Ki2=0.1;  Kd2=0.5;
   
   La2 = 0.42e-3;           %H
   Ra2 = 0.7;              %Ohm
@@ -40,9 +42,9 @@
 
 
 % Parametros simulacion
-  t_end=0.2;
-  dt=1e-4;
-  sampling=1;
+  t_end=40;
+  dt=1e-3;
+  sampling=50;
 
   % sensor
   K_sensor=12/(pi/4);
@@ -50,11 +52,11 @@
   % condicion inicial
   theta1_ini=theta_m(1,1);
   theta2_ini=theta_m(2,1);
-  theta1_ini=-pi/2;
-  theta2_ini=0;
+  %theta1_ini=-pi/2;
+  %theta2_ini=0;
 
 
-  mode=1;       % Modo  referencia de simulación 1: paso 2: trayectoria 3:zero
+  mode=2;       % Modo  referencia de simulación 1: paso 2: trayectoria 3:zero
 
 
 
@@ -83,7 +85,7 @@ plot(time, w_ref(:,2),"--r",time, w2(:,2),"r")
 
 
 filename = '../Simulation.gif';
-capture=false;
+capture=true;
 h=figure('Renderer', 'painters', 'Position', [100 100 700 400]);
 
 for k= 1:length(time)
@@ -96,6 +98,9 @@ plot([0,S1(1,k)],[0,S1(2,k)], "b","LineWidth",4)
 plot([S1(1,k), S2(1,k)],[S1(2,k), S2(2,k)],"r", "LineWidth",2)
 
 plot(S2(1,1:k),S2(2,1:k),":r")
+
+xline(limit_x,"--")
+yline(limit_y,"--")
 
 axis equal
 ylim([-40,40]);
@@ -113,28 +118,26 @@ color={"blue","red","blue","red"};
 
 var=plot(time,w_ref,time,w2);
 
-% for i=1:4 
-%   
-% h(i).LineStyle=style{i};
-% end
 [var(:).LineStyle] = style{:};
 [var(:).Color] = color{:};
 
-title("\theta  [rad]")
-
+ylabel("\theta  [rad]")
+xlabel("tiempo[s]")
 hold off
 
 subplot(3,2,4)
 plot(time,w2-w_ref)
-title("Error [rad]")
+yline(0)
+ylabel("Error [rad]")
+xlabel("tiempo[s]")
 
 subplot(3,2,6)
 plot(time,torque)
-title("Torque [Nm]")
-
- drawnow
-
-  if (capture)
+ylabel("Torque [Nm]")
+xlabel("tiempo[s]")
+ 
+  if (capture & mod(k,20)==1)
+    drawnow
     % Capture the plot as an image 
     frame = getframe(h); 
     im = frame2im(frame); 
@@ -143,7 +146,7 @@ title("Torque [Nm]")
     if k == 1 
         imwrite(imind,cm,filename,'gif', 'Loopcount',inf); 
     else 
-        imwrite(imind,cm,filename,'gif','WriteMode','append','DelayTime',n*dt); 
+        imwrite(imind,cm,filename,'gif','WriteMode','append','DelayTime',16*n*dt); 
     end 
   end
 
