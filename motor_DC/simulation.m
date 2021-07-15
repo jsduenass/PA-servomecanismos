@@ -2,8 +2,8 @@
 % Parametros motor 1
   N1=5;
 
-  Kp1 = 3.16, Ki1 = 4.1, Kd1 = 0.0343
-  Kp1 = 0.688, Ki1 = 0;     Kd1 = 0;
+  Kp1 = 2.16, Ki1 = 0.3, Kd1 = 0.3
+  Kp1 = 1, Ki1 = 0;     Kd1 = 0;
   
   La1 = 2.93e-3;               %H
   Ra1 = 0.89;               %Ohm
@@ -23,8 +23,8 @@
 
   N2=15;
 
-  Kp2 = 0.146, Ki2 = 1.52, Kd2 = 0.00151;
-  Kp2 = 0.0353;  Ki2=0;  Kd2=0;
+  Kp2 = 2.46, Ki2 = 0.5, Kd2 = 0.00;
+  Kp2 = 1;  Ki2=0;  Kd2=0;
   
   La2 = 0.42e-3;           %H
   Ra2 = 0.7;              %Ohm
@@ -40,9 +40,9 @@
 
 
 % Parametros simulacion
-  t_end=20;
+  t_end=0.2;
   dt=1e-4;
-  sampling=500;
+  sampling=1;
 
   % sensor
   K_sensor=12/(pi/4);
@@ -50,10 +50,17 @@
   % condicion inicial
   theta1_ini=theta_m(1,1);
   theta2_ini=theta_m(2,1);
+  theta1_ini=-pi/2;
+  theta2_ini=0;
 
-  mode=2;       % Modo  referencia de simulación 1: paso 2: trayectoria 3:zero
 
-my_model=sim("motor_DC/servo_system_model.slx");
+  mode=1;       % Modo  referencia de simulación 1: paso 2: trayectoria 3:zero
+
+
+
+%my_model=sim("motor_DC/servo_system_model.slx");
+
+my_model=sim("../Motor_SimScape.slx");
 
 close all
 time=my_model.theta_ref.Time;

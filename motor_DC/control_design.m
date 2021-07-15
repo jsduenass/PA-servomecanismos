@@ -31,7 +31,7 @@ K_driver=1;
 
 % Calculo Parametro controlador 
 K_mot_prima=K_driver*K_mot*K_sensor;
-K_p=1/(4*tau_mot*K_mot_prima);
+K_p= 1/(4*tau_mot*K_mot_prima);
 
 
 s=tf('s');
@@ -79,32 +79,43 @@ t_p=2*tau_mot;
 z= -log(SO)/(sqrt(pi^2+log(SO)));
 w_n=pi/(t_p*sqrt(1-z^2));
 
- 
+ %% de aqui pa bajo
+   close all
+   pos=w2(:,2);
+  var =gradient(pos,time(2));
+  subplot(2,1,1)
+  plot(time,mod(pos,2*pi))
+  subplot(2,1,2)
+  plot(time,var)
 %%  Calculo de parametros en velocidad
-% t=omega.Time;
-% 
-% y= omega.Data;
-% 
-% plot(t,y)
-% 
-% y_max=max(y);
-% K_mot_calc=y_max/A;
-% 
-% id=find(diff(y<y_max*0.63));
-% 
-% tau_mot_calc=t(id);
-% 
-% %% Calculo de parametros en posición
+ t=time;
+ A=pi/16;
+y= var;
+
+
+plot(t,y)
+
+y_max=max(y);
+K_mot_calc=y_max/A
+
+id=find(diff(y<y_max*0.63));
+
+tau_mot_calc=t(id)
+
+%% Calculo de parametros en posición
 % t=theta.Time;
 % 
 % y= theta.Data;
-% 
-% plot(t,y)
-% 
-% p = polyfit(t,y,1);
-% 
-% m=p(1);
-% b=(2);
-% K_mot_calc=m/A;
-% tau_mot_calc=b/m;
-% 
+A=pi/16;
+y=pos - pos(1);
+plot(t,y)
+
+p = polyfit(t,y,1);
+
+m=p(1);
+b=p(2);
+K_mot_calc=m/A
+tau_mot_calc=-b/m
+
+plot(t,y, t, m*t+b,"--")
+

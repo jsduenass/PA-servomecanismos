@@ -14,15 +14,16 @@ home=[x_home;y_home];
 % masa [kg]
 m1=0.455*L1/100;   % masa barra 1
 m2=0.455*L2/100;   % masa barra 2
-mM1=0.2;           % masa motor 1
-mM2=0.4;           % masa motor 2
+mM1=0.4;           % masa motor 1
+mM2=0.2;           % masa motor 2
 mL=0.02;           % masa carga
 
 % Parametros de motor
 
-J_m=5.8e-6;
+J_m2=5.8e-6;
+J_m1=3.30E-04;
 
-b=[0.05,0.05];       % coeficiente de fricción de sistema [Nm/s] 
+b=[0.05;0.05];       % coeficiente de fricción de sistema [Nm/s] 
 N= 1;             % razon sistema de transmisión
 
 % Parametros de trayectoria trevol estilizado
@@ -61,13 +62,13 @@ angle  = interp1(tiempo,angle,t);
 
 % modelo lineal
 t=linspace(0,t(end),length(t));
-T=40;
+T=5;
 angle= 2*pi*t/T+angle_ini;
 dt=t(2);
 
 %% positioning from home to trayectory
-
-[x,y]=trayectory(K,phi,A,angle);
+ 
+ [x,y]=trayectory(K,phi,A,angle);
 % 
 % n=ceil(min_d/(cruce_speed*dt))+1; 
 % x_trans=linspace(x_home,x(1),n);    % Transtional trayectories
@@ -101,8 +102,8 @@ for k= 1:length(t)
   P21=L2*R(theta2+theta1)*[1;0];
   P2=P21+P1;
   
-  c2(:,end+1)= (m2*P21/2+mL*P21)./(m2+mL);                      % centro de masa 1
-  c1(:,end+1)= (m2*(P21/2+P1) + mL*(P2+P1)+ mM2*P1 + m1*P1/2)./(m1+m2+mL+mM2);   % centro de masa 2
+  c2(:,end+1)= (m2*P21/2+mL*P21)./(m2+mL);                      % centro de masa 2
+  c1(:,end+1)= (m2*(P21/2+P1) + mL*(P2+P1)+ mM2*P1 + m1*P1/2)./(m1+m2+mL+mM2);   % centro de masa 1
   
   S1(:,end+1)=P1;   % trayectoria eslabon 1
   S2(:,end+1)=P2;   % trayectoria eslabon 2
@@ -110,12 +111,12 @@ end
 
 % Calculo de torque Dinamico 
 
-Tf=b*omega_m;       % Torque de fricción 
-Tp=[0,0]*omega_m;       % Torque de proceso
+Tf=b.*omega_m;       % Torque de fricción 
+Tp=[0;0].*omega_m;       % Torque de proceso
 Tg=-9.81*[(m1+m2+mL+mM2)*c1(1,:);(m2+mL)*c2(1,:)]*10^-2;   % Torque gravitacional
-J_barra=1/3*[(m1*L1^2);(m2*L2^2)]*10^-4;                        % Momento de inercia
+J_barra=1/3*[(m1*(L1/100)^2);(m2*(L2/100)^2)];                        % Momento de inercia
 
-J_L=J_barra+J_m;
+J_L=J_barra+J_m2;
 
 Tm=alpha_m.*J_L + Tg +Tf + Tp;
 
@@ -237,7 +238,7 @@ for k= 1:length(t)
   grid on
 
   drawnow
-  n=5
+  n=5;
   if (capture & mod(k,n)==1)
     % Capture the plot as an image 
     frame = getframe(h); 
