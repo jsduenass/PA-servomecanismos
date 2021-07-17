@@ -1,4 +1,6 @@
 
+run '../main.m'
+%%
 % Parametros motor 1
   N1=5;
   N1=1;
@@ -13,8 +15,7 @@
   J1 =J_barra(1)/N1^2;      %kg-m^2
   b1=0.005;
 
-  JM1=3.3e-4
-  RI1=J1/JM1;
+  RI1=J1/J_m1;
 
   Kt1 = 0.018;           %Nm / A
   Kb1 = 0.018;           %V /(rad / s)
@@ -34,15 +35,14 @@
   J2 =J_barra(2)/N2^2;        %kg-m^2
   b2=3.7e-6;
 
-  JM2 =5.8e-6;
-  RI2=J2/JM2
+  RI2=J2/J_m2
 
   Kt2 = 0.0145;           %Nm / A
   Kb2 = 0.0145;           %V /(rad / s)
 
 
 % Parametros simulacion
-  t_end=40;
+  t_end=10;
   dt=1e-3;
   sampling=50;
 
@@ -59,36 +59,43 @@
   mode=2;       % Modo  referencia de simulación 1: paso 2: trayectoria 3:zero
 
 
-
+load 'log.mat'
+  
 %my_model=sim("motor_DC/servo_system_model.slx");
 
 my_model=sim("../Motor_SimScape.slx");
 
 close all
 time=my_model.theta_ref.Time;
-w_ref=my_model.theta_ref.Data;
+theta_ref=my_model.theta_ref.Data;
 
-w2=my_model.theta_m.Data;
+theta_traveled=my_model.theta_m.Data;
 
-[var,S2_ref]=position(time,w_ref');
+[S1_ref,S2_ref]=position(time,theta_ref');
 
-[S1,S2]=position(time,w2');
+[S1,S2]=position(time,theta_traveled');
 
 torque=my_model.T_m.Data;
 
-%subaxis(4,6,1, 'Spacing', 0.03, 'Padding', 0, 'Margin', 0, 'SpacingVert', 0.03);
-plot(time, w_ref(:,1),"--b",time, w2(:,1),"b")
+trayectory1=[S1_ref;ones(size(time'))]'+0.01*rand(length(time),3);
 
-plot(time, w_ref(:,2),"--r",time, w2(:,2),"r")
+trayectory2=[S2_ref;4.5*ones(size(time'))]'+0.01*rand(length(time),3);
+
+save('log.mat','trayectory1','trayectory2')
+
+%subaxis(4,6,1, 'Spacing', 0.03, 'Padding', 0, 'Margin', 0, 'SpacingVert', 0.03);
+plot(time, theta_ref(:,1),":b",time, theta_traveled(:,1),"b")
+
+plot(time, theta_ref(:,2),":r",time, theta_traveled(:,2),"r")
 
 %% Animación
 
 
 filename = '../Simulation.gif';
-capture=true;
+capture=false;
 h=figure('Renderer', 'painters', 'Position', [100 100 700 400]);
 
-for k= 1:length(time)
+for k= 1:5:length(time)
   
 subplot(1,2,1)
 plot(S2_ref(1,1:k),S2_ref(2,1:k),"--g")
@@ -116,7 +123,7 @@ subplot(3,2,2)
 style={"--","--","-","-"};
 color={"blue","red","blue","red"};
 
-var=plot(time,w_ref,time,w2);
+var=plot(time,theta_ref,time,theta_traveled);
 
 [var(:).LineStyle] = style{:};
 [var(:).Color] = color{:};
@@ -126,7 +133,7 @@ xlabel("tiempo[s]")
 hold off
 
 subplot(3,2,4)
-plot(time,w2-w_ref)
+plot(time,theta_traveled-theta_ref)
 yline(0)
 ylabel("Error [rad]")
 xlabel("tiempo[s]")
@@ -135,9 +142,9 @@ subplot(3,2,6)
 plot(time,torque)
 ylabel("Torque [Nm]")
 xlabel("tiempo[s]")
- 
+  drawnow
   if (capture & mod(k,20)==1)
-    drawnow
+   
     % Capture the plot as an image 
     frame = getframe(h); 
     im = frame2im(frame); 
