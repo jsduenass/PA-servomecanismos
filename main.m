@@ -1,6 +1,6 @@
 clear, clc, close all
 
-
+addpath('auxiliary_functions')
 % Parametros de mecanismo
 global L1 L2 desp_x desp_y  r_base
 % Distancia [cm]
@@ -20,8 +20,8 @@ mL=0.02;           % masa carga
 
 % Parametros de motor
 
-J_m2=5.8e-6;
 J_m1=3.30E-04;
+J_m2=5.8e-6;
 
 b=[0.05;0.05];       % coeficiente de fricción de sistema [Nm/s] 
 N= 1;             % razon sistema de transmisión
@@ -30,7 +30,7 @@ N= 1;             % razon sistema de transmisión
 
 r_base=8.5;       % radio base [cm]
 Amp=1.1;            % factor de escala entre 1 y 1.2
-phi=-3*pi/4;         % desface
+phi=pi/4;         % desface
 K=0.4;            % factor de estilizado entre 0 y 1  
 cruce_speed=4;
 r_max=Amp*r_base*(1+K);
@@ -60,7 +60,7 @@ tiempo=cumtrapz(angle,dt(angle));  % tiempo con espaciado no uniforme
 t=linspace(tiempo(1),tiempo(end),length(tiempo));
 angle  = interp1(tiempo,angle,t);
 
-% modelo lineal
+% trayectoria a velocidad angular constante
 t=linspace(0,t(end),length(t));
 T=20;
 angle= 2*pi*t/T+angle_ini;
@@ -165,98 +165,13 @@ grid on
 limit_x=desp_x-r_max;
 limit_y=desp_y;
 
-%%
-pause(1)
+%% Euler vs Newtonian comparison
+run Euler_Lagrange.m
 
-%h=figure()
-%h=figure('units','normalized','outerposition',[0 0 1 1])   %full screen
-
-h=figure('Renderer', 'painters', 'Position', [100 100 700 400]);
-
-axis tight manual % this ensures that getframe() returns a consistent size
-filename = './media/inverseKinematics.gif';
-capture=false;
+%% Animation
+run animation.m
 
 
-for k= 1:1 %length(t)  
-  subplot(2,2,1)
-  %arm
-  plot([0,S1(1,k)],[0,S1(2,k)], "LineWidth",4)
-  hold on
-  plot([S1(1,k), S2(1,k)],[S1(2,k), S2(2,k)], "LineWidth",2)
-  plot(c1(1,k),c1(2,k),"ob")
-  plot(c2(1,k)+S1(1,k),c2(2,k)+S1(2,k),"or")
-  
-  % work area
-  %rectangle('Position',workArea,"LineStyle","--")  
-  xline(limit_x,"--")
-  yline(limit_y,"--")
-  %target trajectory
-  plot(x,y)
-  
-  title("trayectoria")
-  grid on
-  axis equal
-  xlim([-14,max(x)+2])
-  ylim([-20,max(y)+2])
-  hold off
-  
-  
-  subplot(3,2,5)
-  plot(t(1:k),Tm(:,1:k))
-  title("Torque de motor [Nm]")
-  grid on
-  xlim([0,t(end)])
-  ylim([min(Tm,[],"all"),max(Tm,[],"all")])
-  
-  subplot(3,2,2)
-  plot(t(1:k),theta_m(:,1:k))
-  title("\theta_m [rad]")
-  xlim([0,t(end)])
-  ylim([min(theta_m,[],"all"),max(theta_m,[],"all")])
-  grid on
-
-  plot(t(1:k),velocity(1:k))
-  title("velocidad [cm/s]")
-  ylim([0,12])
-  xlim([0,t(end)])
-  
-  
-  subplot(3,2,4)
-  plot(t(1:k),omega_m(:,1:k)); 
-  title("\omega_m [rad/s]")
-  xlim([0,t(end)])
-  ylim([min(omega_m,[],"all"),max(omega_m,[],"all")])
-  grid on
-
-  subplot(3,2,6)
-  plot(t(1:k),alpha_m(:,1:k))
-  title("\alpha_m [rad/s^2]")
-  xlim([0,t(end)])
-  ylim([min(alpha_m,[],"all"),max(alpha_m,[],"all")])
-  
-  grid on
-
-  drawnow
-  n=5;
-  if (capture & mod(k,n)==1)
-    % Capture the plot as an image 
-    frame = getframe(h); 
-    im = frame2im(frame); 
-    [imind,cm] = rgb2ind(im,256); 
-    % Write to the GIF File 
-    if k == 1 
-        imwrite(imind,cm,filename,'gif', 'Loopcount',inf); 
-    else 
-        imwrite(imind,cm,filename,'gif','WriteMode','append','DelayTime',n*dt); 
-    end 
-  end
-
-end
-
-
-
-%%
 
  
 
