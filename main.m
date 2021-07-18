@@ -1,12 +1,13 @@
 clear, clc, close all
 
 addpath('auxiliary_functions')
+
 % Parametros de mecanismo
 global L1 L2 desp_x desp_y  r_base
 % Distancia [cm]
 L1=22;    L2=20;
-desp_x=24;    desp_y=14;
-x_home=8;     y_home=-8;
+desp_x=22;    desp_y=10;
+x_home=4;     y_home=-10;
 
 displacement=[desp_x;desp_y];
 home=[x_home;y_home];
@@ -15,7 +16,7 @@ home=[x_home;y_home];
 m1=0.455*L1/100;   % masa barra 1
 m2=0.455*L2/100;   % masa barra 2
 mM1=0.4;           % masa motor 1
-mM2=0.2;           % masa motor 2
+mM2=0.21;           % masa motor 2
 mL=0.02;           % masa carga
 
 % Parametros de motor
@@ -23,14 +24,14 @@ mL=0.02;           % masa carga
 J_m1=3.30E-04;
 J_m2=5.8e-6;
 
-b=[0.05;0.05];       % coeficiente de fricción de sistema [Nm/s] 
+b=[0.05;3.7e-6];       % coeficiente de fricción de sistema [Nm/s] 
 N= 1;             % razon sistema de transmisión
 
 % Parametros de trayectoria trevol estilizado
-
+T=10;             % Periodo de giro
 r_base=8.5;       % radio base [cm]
-Amp=1.1;            % factor de escala entre 1 y 1.2
-phi=pi/4;         % desface
+Amp=1.3;          % factor de escala entre 1 y 1.3
+phi=0;         % desface
 K=0.4;            % factor de estilizado entre 0 y 1  
 cruce_speed=4;
 r_max=Amp*r_base*(1+K);
@@ -62,9 +63,11 @@ angle  = interp1(tiempo,angle,t);
 
 % trayectoria a velocidad angular constante
 t=linspace(0,t(end),length(t));
-T=20;
+
 angle= 2*pi*t/T+angle_ini;
 dt=t(2);
+
+
 
 %% positioning from home to trayectory
  
@@ -79,6 +82,12 @@ t=[t,t(end)+(1:2*n)*dt];
 
 % perfil de movimiento angular
 theta_m=inverse_kinematic(x,y) ;
+%%
+
+%t=time;
+%dt=t(2);
+%theta_m=theta_ref';
+
 
 % perfil de velocidad angular
 omega_m=gradient(theta_m,dt);
@@ -87,6 +96,7 @@ omega_m=gradient(theta_m,dt);
 alpha_m=gradient(omega_m,dt);
 
 velocity=vecnorm(gradient([x;y],dt),2,1);
+%velocity=t;
 
 % series de tiempo vector de posición 
 S1=[]; S2=[];
@@ -113,7 +123,7 @@ end
 
 Tf=b.*omega_m;       % Torque de fricción 
 Tp=[0;0].*omega_m;       % Torque de proceso
-Tg=-9.81*[(m1+m2+mL+mM2)*c1(1,:);(m2+mL)*c2(1,:)]*10^-2;   % Torque gravitacional
+Tg=9.81*[(m1+m2+mL+mM2)*c1(1,:);(m2+mL)*c2(1,:)]*10^-2;   % Torque gravitacional
 J_barra=1/3*[(m1*(L1/100)^2);(m2*(L2/100)^2)];                        % Momento de inercia
 
 J_L=J_barra+J_m2;
@@ -169,7 +179,7 @@ limit_y=desp_y;
 run Euler_Lagrange.m
 
 %% Animation
-run animation.m
+%run animation.m
 
 
 
