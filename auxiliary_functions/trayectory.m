@@ -1,9 +1,9 @@
 
-function [x,y]=trayectory(K,phi,A,angle)
+function [x,y]=trayectory(Amp,phi,K,angle)
 global  r_base desp_x desp_y 
 
 
-r=K*r_base*(1-A*cos(4*angle-phi));
+r=Amp*r_base*(1-K*cos(4*angle-phi));
 
 % Desplazamiento de trayectoria
 [x,y]=pol2cart(angle,r);  

@@ -15,21 +15,22 @@ home=[x_home;y_home];
 % masa [kg]
 m1=0.455*L1/100;   % masa barra 1
 m2=0.455*L2/100;   % masa barra 2
-mM1=0.4;           % masa motor 1
-mM2=0.21;           % masa motor 2
+
+mM1=0.325;           % masa motor 1
+mM2=0.095;           % masa motor 2
 mL=0.02;           % masa carga
 
 % Parametros de motor
 
-J_m1=3.30E-04;
-J_m2=5.8e-6;
+J_m1=7.76E-06;
+J_m2=9.00E-07;
 
 b=[0.05;3.7e-6];       % coeficiente de fricción de sistema [Nm/s] 
 N= 1;             % razon sistema de transmisión
 
 % Parametros de trayectoria trevol estilizado
 T=10;             % Periodo de giro
-r_base=8.5;       % radio base [cm]
+r_base=7.5;       % radio base [cm]
 Amp=1.3;          % factor de escala entre 1 y 1.3
 phi=0;         % desface
 K=0.4;            % factor de estilizado entre 0 y 1  
@@ -76,9 +77,9 @@ dt=t(2);
 n=ceil(min_d/(cruce_speed*dt))+1; 
 x_trans=linspace(x_home,x(1),n);    % Transtional trayectories
 y_trans=linspace(y_home,y(1),n);
-x=[x_trans, x, flip(x_trans)];
-y=[y_trans, y, flip(y_trans)];
-t=[t,t(end)+(1:2*n)*dt];
+x=[x_trans, x ];
+y=[y_trans, y];
+t=[t,t(end)+(1:n)*dt];
 
 % perfil de movimiento angular
 theta_m=inverse_kinematic(x,y) ;
@@ -125,34 +126,39 @@ Tf=b.*omega_m;       % Torque de fricción
 Tp=[0;0].*omega_m;       % Torque de proceso
 Tg=9.81*[(m1+m2+mL+mM2)*c1(1,:);(m2+mL)*c2(1,:)]*10^-2;   % Torque gravitacional
 J_barra=1/3*[(m1*(L1/100)^2);(m2*(L2/100)^2)];                        % Momento de inercia
-
 J_L=J_barra+J_m2;
 
 Tm=alpha_m.*J_L + Tg +Tf + Tp;
+Tm = Tm/N; 
+
 
 %close all
 
 plot(t,velocity)
 title("velocidad [cm/s]")
+xlabel("Tiempo [s]")
 ylim([0,12])
 
 figure ()
 subplot(3,1,1)
 plot(t,theta_m)
 title("\theta_m [rad]")
+xlabel("Tiempo [s]")
 grid on
 
 subplot(3,1,2)
 h=plot(t,omega_m); 
 title("\omega_m [rad/s]")
+xlabel("Tiempo [s]")
 grid on
 
 subplot(3,1,3)
 plot(t,alpha_m)
 title("\alpha_m [rad/s^2]")
+xlabel("Tiempo [s]")
 grid on
 
-%pause(2)
+% pause(2)
 % 
 % figure()
 % 
@@ -166,17 +172,19 @@ grid on
 % axis equal
 % hold off
 
-%pause(2)
+pause(2)
 figure()
-plot(t,Tm)
-title("Torque de motor [Nm]")
+plot(t,Tm(1,:),t,Tm(2,:))
+legend(["Torque Eslabon 1","Torque Eslabon 2"])
+title("Torque de mecanismo [Nm]")
+xlabel("Tiempo [s]")
 grid on
 
 limit_x=desp_x-r_max;
 limit_y=desp_y;
 
 %% Euler vs Newtonian comparison
-run Euler_Lagrange.m
+%run Euler_Lagrange.m
 
 %% Animation
 %run animation.m

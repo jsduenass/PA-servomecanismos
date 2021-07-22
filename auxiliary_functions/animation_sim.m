@@ -1,7 +1,7 @@
 
 
-filename = './Simulation.gif';
-capture=false;
+filename = './media/animation_sim.gif';
+capture=true;
 h=figure('Renderer', 'painters', 'Position', [100 100 700 400]);
 
 for k= 1:5:length(time)

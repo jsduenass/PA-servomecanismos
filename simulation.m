@@ -3,7 +3,7 @@ run 'main.m'
 %%
 close all
 
-motors= readtable('motors.xlsx')
+motors= readtable('motors.xlsx');
 
 id_M1=7;
 
@@ -20,30 +20,32 @@ param=table2cell( motors(id_M2,:));
   %N1=1;
   
   Kp1 = 2.16, Ki1 = 0.3, Kd1 = 0.3
-  Kp1 = 3.09 , Ki1 = 0;     Kd1 = 0;
+  Kp1 = 2.88 , Ki1 = 0;     Kd1 = 0;
+  %Kp1 = 1 , Ki1 = 0;     Kd1 = 0.1;
   
-  J1 =J_barra(1)/N1^2;      %kg-m^2
+  J1 =(J_barra(1)+J_barra(2))/N1^2;      %kg-m^2
   
-  RI1=J1/J_m1;
+  RI1=J1/Jm1;
 
   
 
 % Parametros motor 2
 
-  N2=10;
+  N2=16;
   %N2=1;
   
   Kp2 = 2.46, Ki2 = 0.5, Kd2 = 0.50;
-  Kp2 = 2.34;  Ki2=0;  Kd2=0;
+  Kp2 = 2.81;  Ki2=0;  Kd2=0;
+  %Kp2 = 1;  Ki2=0;  Kd2=0.03;
   
   
   J2 =J_barra(2)/N2^2;        %kg-m^2
   
-  RI2=J2/J_m2
+  RI2=J2/Jm2
 
 
 % Parametros simulacion
-  t_end=15;
+  t_end=20.5;
   dt=1e-3;
   sampling=50;
 

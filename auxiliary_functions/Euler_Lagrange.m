@@ -4,8 +4,8 @@ masaL1=0.455*Lbarra1;
 masaL2=0.455*Lbarra2;
 masaCarga=0.02;
 
-masaM1=0.4;
-masaM2=0.2;
+masaM1=0.325;
+masaM2=0.095;
 
 masa1=masaL1+masaM2;
 masa2=masaL2+masaCarga;
@@ -34,11 +34,11 @@ Tmotor2=F.*alpha_m(1,:)+H.*alpha_m(2,:)+Nmat.*omega_m(1,:).*omega_m(2,:)...
 %%
   close all
   subplot(2,1,1)
-  plot(t,Tmotor1,t, -Tm(1,:))
+  plot(t,Tmotor1,t, Tm(1,:))
   legend(["Lagrangian","Newtonian"])
   title("Torque Motor 1")
   subplot(2,1,2)
-  plot(t,Tmotor2,t, -Tm(2,:))
+  plot(t,Tmotor2,t, Tm(2,:))
   legend(["Lagrangian","Newtonian"])
   title("Torque Motor 2")
   
@@ -47,11 +47,12 @@ Tmotor2=F.*alpha_m(1,:)+H.*alpha_m(2,:)+Nmat.*omega_m(1,:).*omega_m(2,:)...
   plot(t,[alpha_m(1,:).*J_L(1) ; Tg(1,:); Tf(1,:)])
   title("Torque Motor 1")
   legend(["T inercial","T gravitacional","T friccion"])
+  xlabel("Tiempo [s]")
  
   subplot(2,1,2)
   plot(t,[alpha_m(2,:).*J_L(2) ; Tg(2,:); Tf(2,:)])
   legend(["T inercial","T gravitacional","T friccion"])
   title("Torque Motor 2")
-  
+  xlabel("Tiempo [s]")
   
   
