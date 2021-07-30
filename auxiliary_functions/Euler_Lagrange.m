@@ -1,3 +1,36 @@
+% Torque plots
+
+figure()
+subplot(2,1,1)
+  plot(t, Tm(1,:),time,T_ref(:,1))
+  legend(["T Newtoniano","T dinamica inversa"])
+  title("Torque Motor 1")
+  subplot(2,1,2)
+  plot(t, Tm(2,:),time,T_ref(:,2))
+  legend(["T Newtoniano","T dinamica inversa"])
+  title("Torque Motor 2")
+
+  
+pause(wait)
+
+figure()
+plot(time,T_ref);
+
+style={"--","--","-","-"};
+color={[0.5,0.5,1],"red","blue","red"};
+
+g=plot(time,T_ref,time,torque);
+
+[g(:).LineStyle] = style{:};
+[g(:).Color] = color{:};
+title("Torque [N/m]")
+legend(["T dinamica inversa 1","T dinamica inversa 2","T mecanismo 1","T mecanismo 2"])
+
+pause(wait)
+
+%% Euler Lagrange
+
+
 Lbarra1=0.22;
 Lbarra2=0.2;
 masaL1=0.455*Lbarra1;   
@@ -32,7 +65,9 @@ Tmotor2=F.*alpha_m(1,:)+H.*alpha_m(2,:)+Nmat.*omega_m(1,:).*omega_m(2,:)...
     -(-masa2*Lbarra1*lc_2.*sin(theta_m(2,:)).*omega_m(1,:).*(omega_m(1,:)+omega_m(2,:)))...
     +masa2*9.81*lc_2.*cos(theta_m(1,:)+theta_m(2,:));
 %%
-  close all
+  
+  
+  figure()
   subplot(2,1,1)
   plot(t,Tmotor1,t, Tm(1,:))
   legend(["Lagrangian","Newtonian"])
@@ -41,6 +76,8 @@ Tmotor2=F.*alpha_m(1,:)+H.*alpha_m(2,:)+Nmat.*omega_m(1,:).*omega_m(2,:)...
   plot(t,Tmotor2,t, Tm(2,:))
   legend(["Lagrangian","Newtonian"])
   title("Torque Motor 2")
+  
+  pause(wait)
   
   figure()
   subplot(2,1,1)
@@ -55,4 +92,4 @@ Tmotor2=F.*alpha_m(1,:)+H.*alpha_m(2,:)+Nmat.*omega_m(1,:).*omega_m(2,:)...
   title("Torque Motor 2")
   xlabel("Tiempo [s]")
   
-  
+  pause(wait)

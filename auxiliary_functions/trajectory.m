@@ -1,5 +1,5 @@
 
-function [x,y]=trayectory(Amp,phi,K,angle)
+function [x,y]=trajectory(Amp,phi,K,angle)
 global  r_base desp_x desp_y 
 
 

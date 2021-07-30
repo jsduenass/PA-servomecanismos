@@ -7,20 +7,21 @@ theta2_ini=0;
 dt = 1e-4;
 sampling=1;
 A=pi/64;
+motor_id=2;     %select between motor 1 and motor 2;
 
 my_model=sim("./sim_models/servo_open_system.slx");
 
 
 
-close all
-
 time=my_model.theta_m.Time;
 
 theta_traveled=my_model.theta_m.Data;
 
-pos=theta_traveled(:,1);
+pos=theta_traveled(:,motor_id);
 
 vel = gradient(pos,time(2));
+ 
+figure()
   subplot(2,1,1)
   plot(time,pos)
   grid on 
@@ -32,11 +33,11 @@ vel = gradient(pos,time(2));
   grid on 
   title("\omega [rad/s]")
   xlabel("t [s]")
+  
+pause(wait)
 %%  Calculo de parametros en velocidad
  t=time;
  y=vel;
-
-plot(t,vel)
 
 y_max=max(y);
 K_mot_calc=y_max/A
@@ -44,6 +45,22 @@ K_mot_calc=y_max/A
 id=find(diff(y<y_max*0.63));
 
 tau_mot_calc=t(id)
+
+
+figure()
+plot(t,vel)
+title("\omega [rad/s]")
+yline(0)
+xline(tau_mot_calc,"--")
+yline(y_max,"--")
+
+xlabel("t [s]")
+
+dim = [.5 .5 .4 .2];
+str = "K_{mot} : " +K_mot_calc+newline+newline+" tau_{mot} : " + tau_mot_calc;
+annotation('textbox',dim,'String',str,'EdgeColor','none')
+
+pause(wait)
 
 % Resultados: 
 % M1 theta=-pi/2 
@@ -59,14 +76,11 @@ tau_mot_calc=t(id)
   % tau_mot_calc = 0.02465
 
 %% Calculo de parametros en posición
-close 'all'
 t=time;
 
 y=pos - pos(1);
-plot(t,y)
 
 % Resultados: 
-
 p = polyfit(t,y,1);
 
 m=p(1);
@@ -74,11 +88,18 @@ b=p(2);
 K_mot_calc=m/A
 tau_mot_calc=-b/m
 
+figure()
 plot(t,y, t, m*t+b,"--")
 grid on 
 title("\theta [rad/s]")
 xlabel("t [s]")
 yline(0)
+xline(tau_mot_calc,"--")
+
+dim = [.22 .5 .4 .2];
+str = "K_{mot} : " +K_mot_calc+newline+newline+" tau_{mot} : " + tau_mot_calc;
+annotation('textbox',dim,'String',str,'EdgeColor','none')
+pause(wait)
 
 % M1 theta=-pi/2
   % K_mot_calc = 6.2708
@@ -141,42 +162,36 @@ J=Jm2;   b=b2;     Ra=Ra2;   La=La2; Kt=Kt2;   Kb=Kb2;
 % K_mot=Kt/(b+Kt*Kb);
 % tau_mot=(Ra*J)/(b+Kt*Kb);
 
-% sensor
-K_sensor=12/(pi/4);
-
 K_driver=1;
-
-
 % Calculo Parametro controlador 
 K_mot_prima=K_driver*K_mot*K_sensor;
 K_p= 1/(4*tau_mot*K_mot_prima);
 
 
 s=tf('s');
-close all
 
 P_motor=(K_driver*K_sensor*Kt)/(s*((J*s+b)*(La*s+Ra)+Kb*Kt));
 P_motor=K_mot_prima/(s*(tau_mot*s+1))
 
+
 %controlSystemDesigner(P_motor) 
-
-for k=1:10
-C = pid(K_p*(0.7+0.1*k));
-sys_cl = feedback(C*P_motor,1);
-
-
-  t = 0:dt:0.4;
-  step(sys_cl,t);
-  grid
-  title('Step Response with Proportional Control')
-  hold on
-end
-
-hold off
-
-figure()
-C = pid(K_p);
-sys_cl = feedback(C*P_motor,1);
+% 
+% for k=1:10
+%   C = pid(K_p*(0.7+0.1*k));
+%   sys_cl = feedback(C*P_motor,1);
+%   t = 0:dt:0.4;
+%   
+% %   step(sys_cl,t);
+% %   grid
+% %   title('Step Response with Proportional Control')
+% %   hold on
+% end
+% 
+% hold off
+% 
+% figure()
+% C = pid(K_p);
+% sys_cl = feedback(C*P_motor,1);
 %%
 s=tf('s');
 P_motor=K_mot/(s*(tau_mot*s+1));
@@ -193,8 +208,8 @@ sys4 = feedback(C4*P_motor,1);
 C5 = pid(1,0,tau_mot);
 sys5 = feedback(C5*P_motor,1);
 
-step(sys2,sys3,sys4,sys5,5)
-legend("P","PI","PID","k_p=1 Kd=Tm")
+% step(sys2,sys3,sys4,sys5,5)
+% legend("P","PI","PID","k_p=1 Kd=Tm")
 
 
  
