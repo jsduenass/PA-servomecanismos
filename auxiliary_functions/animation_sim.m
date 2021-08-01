@@ -1,9 +1,9 @@
 
 
 filename = './media/animation_sim.gif';
-capture=true;
+capture=false;
 h=figure('Renderer', 'painters', 'Position', [100 100 700 400]);
-
+n=1;
 for k= 1:5:length(time)
   
 subplot(1,2,1)
@@ -49,11 +49,11 @@ ylabel("Error [rad]")
 xlabel("tiempo[s]")
 
 subplot(3,2,6)
-plot(time(1:k),torque(1:k,:))
+plot(time(1:k),V_control(1:k,:))
 xlim([0,time(end)])
-ylim([min(torque,[],'all'),max(torque,[],'all')])
+ylim([min(V_control,[],'all'),max(V_control,[],'all')])
 
-ylabel("Torque [Nm]")
+ylabel("Voltaje [V]")
 xlabel("tiempo[s]")
   drawnow
   if (capture & mod(k,20)==1)
