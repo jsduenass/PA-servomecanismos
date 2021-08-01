@@ -114,30 +114,57 @@ pause(wait)
 % M2 theta=-pi/2
   % K_mot_calc =  51.2213
   % tau_mot_calc = 0.0203
+
+  
 %% controller design
-K_mot =  1.6425;
-tau_mot = 0.0774;
-Kp1= 1/(4*tau_mot*K_mot)
 
-% K_mot =   1.8194;
-% tau_mot =0.1565;
-% 
-% Kp2= 1/(4*tau_mot*K_mot)
+K_mot=5.4;
+tau_mot=0.023;
+s=tf('s');
+P_motor=K_mot/(s*(tau_mot*s+1))
 
-%% alternative controller
+% criterios de diseño
+SO=0.01;     % valor proporcional de sobrepico 
+t_p=0.1;     % tiempo pico
+  
+% respuesta criticamente amortiguada
+  K_p= 1/(4*tau_mot*K_mot);
+
+  C1 = pid(K_p,0,0);
+  sys1 = feedback(C1*P_motor,1);
+
+% por sobrepico /zeta
+  z= -log(SO)/(sqrt(pi^2+log(SO)^2));
+
+  Kp2= 1/(4*z^2*tau_mot*K_mot);
+
+  C2 = pid(Kp2,0,0);
+  sys2 = feedback(C2*P_motor,1);
 
 
-K_mot=1.6425
-tau_mot=0.0774;
+% por tiempo pico 
+  z= -log(SO)/(sqrt(pi^2+log(SO)^2));
+  w_n=pi/(t_p*sqrt(1-z^2));
 
-SO=0.1;  % valor proporcional de sobrepico 
-t_p=4*tau_mot; 
-z= -log(SO)/(sqrt(pi^2+log(SO)));
-w_n=pi/(t_p*sqrt(1-z^2));
+  Kp=w_n^2*(tau_mot/K_mot)
 
-Kp=w_n/K_mot
+  Kd=(2*z*w_n*tau_mot-1)/K_mot
 
-Kd=(2*z*w_n-tau_mot)/K_mot
+
+  C3 = pid(Kp,0,Kd);
+  sys3 = feedback(C3*P_motor,1);
+
+
+  C4 = pid(Kp,0,0);
+  sys4 = feedback(C4*P_motor,1);
+  
+figure()
+step(sys1,sys2,sys3,sys4);
+xline(t_p,"--","t_{pico}")
+yline(1+SO,"--r","Max sobre pico ")
+legend("crit amort:  P=" +K_p,"\zeta:         P="+Kp2, ...
+        "t_{pico}: P="+ Kp +" D="+Kd,"t_{pico}: P="+ Kp)
+
 
 %%
 % parametros motor DC generico
