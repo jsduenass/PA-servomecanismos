@@ -1,5 +1,6 @@
 %% Caracterización del sistema
-t_end=0.4;
+t_end=20;
+t_end=0.4
 theta1_ini=-pi/2;
 
 theta1_ini=0;
@@ -162,8 +163,14 @@ figure()
 step(sys1,sys2,sys3,sys4);
 xline(t_p,"--","t_{pico}")
 yline(1+SO,"--r","Max sobre pico ")
-legend("crit amort:  P=" +K_p,"\zeta:         P="+Kp2, ...
-        "t_{pico}: P="+ Kp +" D="+Kd,"t_{pico}: P="+ Kp)
+str_temp="t_{pico}: P="+ Kp +" D="+Kd;
+str=["crit amort:  P=" + K_p,"\zeta:      P="+Kp2 ,str_temp  ,"t_{pico}: P="+ Kp];
+legend(str, "Location","southeast")
+pause(wait)
+
+figure()
+bode(P_motor,sys2,sys3)
+legend(["modelo motor","controlador P","controlador PD"])
 
 
 %%
@@ -198,8 +205,8 @@ K_p= 1/(4*tau_mot*K_mot_prima);
 s=tf('s');
 
 P_motor=(K_driver*K_sensor*Kt)/(s*((J*s+b)*(La*s+Ra)+Kb*Kt));
-P_motor=K_mot_prima/(s*(tau_mot*s+1))
-
+%P_motor=K_mot_prima/(s*(tau_mot*s+1))
+%bode(P_motor)
 
 %controlSystemDesigner(P_motor) 
 % 

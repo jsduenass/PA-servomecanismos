@@ -2,6 +2,8 @@
 % Parametros motor 1
   Kp1 = 2.88 , Ki1 = 0;     Kd1 = 0;
   
+  %Kp1 = 13 , Ki1 = 0;     Kd1 = 0.2;
+  
   J1 =(J_barra(1)+J_barra(2))/N1^2;      %kg-m^2
   
   RI1=J1/Jm1;
@@ -14,16 +16,11 @@
   
   RI2=J2/Jm2
 
-
-  % sensor
-  K_sensor=15;
   
   % condicion inicial
   theta_ini=inverse_kinematic(x_home,y_home) ;
   theta1_ini=theta_ini(1);
   theta2_ini=theta_ini(2);
-
-  mode=2;       % Modo  referencia de simulación 1: paso 2: trayectoria 3:zero
 
 
 load 'log.mat'
@@ -43,6 +40,8 @@ theta_traveled=my_model.theta_m.Data;
 torque=my_model.T_m.Data;
 
 T_ref=my_model.T_ref.Data;
+
+V_control=my_model.V_control.Data;
 
 ref1=[S1_ref;ones(size(time'))]'+0.01*rand(length(time),3);
 

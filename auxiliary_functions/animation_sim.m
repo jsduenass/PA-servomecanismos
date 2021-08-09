@@ -3,8 +3,8 @@
 filename = './media/animation_sim.gif';
 capture=false;
 h=figure('Renderer', 'painters', 'Position', [100 100 700 400]);
-n=1;
-for k= 1:5:length(time)
+n=5;
+for k= 1:n:length(time)
   
 subplot(1,2,1)
 plot(S2_ref(1,1:k),S2_ref(2,1:k),"--r")
@@ -56,7 +56,7 @@ ylim([min(V_control,[],'all'),max(V_control,[],'all')])
 ylabel("Voltaje [V]")
 xlabel("tiempo[s]")
   drawnow
-  if (capture & mod(k,20)==1)
+  if (capture )
    
     % Capture the plot as an image 
     frame = getframe(h); 
@@ -66,7 +66,7 @@ xlabel("tiempo[s]")
     if k == 1 
         imwrite(imind,cm,filename,'gif', 'Loopcount',inf); 
     else 
-        imwrite(imind,cm,filename,'gif','WriteMode','append','DelayTime',16*n*dt); 
+        imwrite(imind,cm,filename,'gif','WriteMode','append','DelayTime',n*T_s); 
     end 
   end
 

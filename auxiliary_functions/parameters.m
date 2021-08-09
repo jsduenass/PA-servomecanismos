@@ -12,6 +12,7 @@ L1=22;    L2=20;
 desp_x=22;    desp_y=10;
 x_home=4;     y_home=-10;
 
+
 displacement=[desp_x;desp_y];
 home=[x_home;y_home];
 
@@ -22,6 +23,10 @@ mL=0.02;           % masa carga
 
 % Parametros de motor
 motors= readtable('motors.xlsx');
+
+
+% sensor
+K_sensor=15;
 
 % motors id from table 
 id_M1=7;      
@@ -58,6 +63,8 @@ K=0.4;            % factor de estilizado entre 0 y 1
 cruce_speed=4;
 r_max=Amp*r_base*(1+K);
 
+limit_x=desp_x-r_max;
+limit_y=desp_y;
 
 % calculo angulo inicial de trayectoria como aquel más cercano a la posición home 
 [x,y]=trajectory(Amp,phi,K,linspace(0,2*pi,100));
@@ -78,7 +85,7 @@ x=x+desp_x;   y=y+desp_y;
 d=sqrt((x-x_home).^2+(y-y_home).^2);
 vel=(r_base*2*pi/T);
 
-t_start=d/vel
+t_start=d/vel;
 
 
 angle_ini= angle_ini + pi*t_start/T;
